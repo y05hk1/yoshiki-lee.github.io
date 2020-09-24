@@ -3,11 +3,11 @@
   <title>leebeecee</title>
   
   
-  <link href="http://example.com/atom.xml" rel="self"/>
+  <link href="http://yoursite.com/atom.xml" rel="self"/>
   
-  <link href="http://example.com/"/>
-  <updated>2020-09-23T06:25:44.090Z</updated>
-  <id>http://example.com/</id>
+  <link href="http://yoursite.com/"/>
+  <updated>2020-09-24T02:57:35.375Z</updated>
+  <id>http://yoursite.com/</id>
   
   <author>
     <name>yo-lee</name>
@@ -17,13 +17,53 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>初遇</title>
-    <link href="http://example.com/2020/09/23/%E5%88%9D%E8%AF%86/"/>
-    <id>http://example.com/2020/09/23/%E5%88%9D%E8%AF%86/</id>
-    <published>2020-09-23T03:52:41.000Z</published>
-    <updated>2020-09-23T06:25:44.090Z</updated>
+    <title>逆向工程核心原理笔记</title>
+    <link href="http://yoursite.com/2020/09/23/restudy/"/>
+    <id>http://yoursite.com/2020/09/23/restudy/</id>
+    <published>2020-09-23T08:45:11.023Z</published>
+    <updated>2020-09-24T02:57:35.375Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="初次见面，多多指教"><a href="#初次见面，多多指教" class="headerlink" title="初次见面，多多指教"></a>初次见面，多多指教</h2><p>​    我是<a href="https://yoshiki-lee.github.io/">yoshiki-lee</a></p><p>​    自我介绍这里暂时就略过吧，因为目前处于初学的阶段，也没有什么成绩。</p><p>​    目前入坑二进制安全，也简单的做了<a href="https://buuoj.cn/resources">BUUCTF</a>一些re方向的入门题目。可能现在有的东西，只有热情和兴趣，但对于迷茫了许久的我来说，下定决心要做这个门槛较高的方向，也是很宝贵的经历。</p><p>​    我会在这里更新自己的一些学习笔记，希望能和正处于这个行业的师傅们有所交流。</p><pre><code> 谢谢[wjllz](https://redogwu.github.io/)这个b。</code></pre>]]></content>
+    <content type="html"><![CDATA[<h1 id="逆向工程核心原理学习笔记"><a href="#逆向工程核心原理学习笔记" class="headerlink" title="逆向工程核心原理学习笔记"></a>逆向工程核心原理学习笔记</h1><p>作者：<a href="yoshiki-lee.github.io">yoshiki-lee</a> </p><p>本专题的目的是为了总结逆向工程核心原理这本书籍一些比较重要的知识点。</p><h3 id="第一部分："><a href="#第一部分：" class="headerlink" title="第一部分："></a>第一部分：</h3><h4 id="ollydbg的基本使用："><a href="#ollydbg的基本使用：" class="headerlink" title="ollydbg的基本使用："></a>ollydbg的基本使用：</h4><p>待更新</p><h4 id="栈与栈帧："><a href="#栈与栈帧：" class="headerlink" title="栈与栈帧："></a>栈与栈帧：</h4><h5 id="栈："><a href="#栈：" class="headerlink" title="栈："></a>栈：</h5><p>​    栈是一种特殊的数据结构，栈最重要的一个思想就是先进后出。而在8086汇编当中，有两个基本的寄存器与其关联，即SS与sp(这里寄存器统一用16位寄存器)，SS指向栈低，sp指向栈顶，由此我们可以得出结论，栈是CPU寄存器里的ss:sp指向的一片内存区域。</p><p><img src="https://i.loli.net/2020/09/24/8glXavjRhVsbnrU.png" alt="stack"></p><p>ps：正是因为栈先进后出，在函数中，引用参数时，参数入栈的顺序与源码中的参数顺序恰好相反</p><h5 id="栈帧："><a href="#栈帧：" class="headerlink" title="栈帧："></a>栈帧：</h5><p>​    栈帧是函数活动的记录，生命周期随着函数开始而开始。核心原理上面讲，ESP寄存器承担着栈顶指针的作用，程序运行中，ESP的值随时变化，访问栈中函数的局部变量、参数时，若以ESP为基准编写程序会十分困难，并且也很难受使CPU引用到准确的作用。</p><p>​    栈帧是利用BP来指向栈帧的底部，用SP指向栈帧的顶部。</p><p>​    我们先来看一个栈帧的函数结构</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#这里使用32位寄存器做说明</span><br><span class="line">PUSH EBP ;函数起始，会先保存进入函数前EBP的值</span><br><span class="line">MOV EBP, ESP ;将ESP的值赋给EBP, 这里也是栈帧的开始，EBP此时指向栈帧的底部。</span><br><span class="line">SUB ESP,08H#提前申请内存空间</span><br><span class="line">...&#x2F;#中间代码</span><br><span class="line">ADD ESP,08H#释放申请的内存空间</span><br><span class="line">MOV ESP, EBP;此时相当于回收栈帧，ESP重新指向曾经的栈顶</span><br><span class="line">POP EBP;恢复EBP的值</span><br></pre></td></tr></table></figure><p>栈帧技术使用EBP寄存器管理局部变量、参数、返回地址。</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h1 id=&quot;逆向工程核心原理学习笔记&quot;&gt;&lt;a href=&quot;#逆向工程核心原理学习笔记&quot; class=&quot;headerlink&quot; title=&quot;逆向工程核心原理学习笔记&quot;&gt;&lt;/a&gt;逆向工程核心原理学习笔记&lt;/h1&gt;&lt;p&gt;作者：&lt;a href=&quot;yoshiki-lee.github</summary>
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Hello World</title>
+    <link href="http://yoursite.com/2020/09/23/hello-world/"/>
+    <id>http://yoursite.com/2020/09/23/hello-world/</id>
+    <published>2020-09-23T06:27:18.587Z</published>
+    <updated>2020-09-23T06:27:18.588Z</updated>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p><h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/writing.html">Writing</a></p><h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/server.html">Server</a></p><h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/generating.html">Generating</a></p><h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure><p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot;&gt;documentation&lt;/a&gt; for</summary>
+      
+    
+    
+    
+    
+  </entry>
+  
+  <entry>
+    <title>初遇</title>
+    <link href="http://yoursite.com/2020/09/23/%E5%88%9D%E8%AF%86/"/>
+    <id>http://yoursite.com/2020/09/23/%E5%88%9D%E8%AF%86/</id>
+    <published>2020-09-23T03:52:41.000Z</published>
+    <updated>2020-09-23T06:36:28.947Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="初次见面，多多指教"><a href="#初次见面，多多指教" class="headerlink" title="初次见面，多多指教"></a>初次见面，多多指教</h2><p>​    我是<a href="https://yoshiki-lee.github.io/">yoshiki-lee</a></p><p>​    自我介绍这里暂时就略过吧，因为目前处于初学的阶段，也没有什么成绩。</p><p>​    目前入坑二进制安全，也简单的做了<a href="https://buuoj.cn/resources">BUUCTF</a>一些re方向的入门题目。可能现在有的东西，只有热情和兴趣，但对于迷茫了许久的我来说，下定决心要做这个门槛较高的方向，也是很宝贵的经历。</p><p>​    我会在这里更新自己的一些学习笔记，希望能和正处于这个行业的师傅们有所交流。    </p><p>​    谢谢<a href="https://redogwu.github.io/">wjllz</a>这个b。</p>]]></content>
     
     
       
