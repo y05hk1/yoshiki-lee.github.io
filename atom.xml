@@ -6,7 +6,7 @@
   <link href="http://yoursite.com/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-09-26T07:29:54.666Z</updated>
+  <updated>2020-10-06T14:08:30.389Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>一些琐事</title>
+    <link href="http://yoursite.com/2020/10/06/10.6%E6%97%A5%E8%AE%B0/"/>
+    <id>http://yoursite.com/2020/10/06/10.6%E6%97%A5%E8%AE%B0/</id>
+    <published>2020-10-06T13:38:03.559Z</published>
+    <updated>2020-10-06T14:08:30.389Z</updated>
+    
+    <content type="html"><![CDATA[<p>​    <font color ="pink"><strong>这里仅记录自己絮絮叨叨且无用的一些话，当作最近的一个出口吧</strong></font></p><p>​    国庆那天就直接去了实验室，但是工作效率并不令人满意。面对面前一大堆没做的东西，也许是贪心想什么都做，但最后什么都没学会。</p><p>​    吴师傅总结我9月的学习历程时提到，除了博客都差强人意。于是不免有些骄傲了，那么后面就紧紧跟着一个大跟头。</p><p>​    之前在学习栈溢出的时候，也犯了一些低级错误。也许是依赖性，并没有仔细的去调试，去用起之前已有的一些基础就去询问吴师傅，师兄当然不会很开心，突然就想起之前当吉他老师的时候，教一些小朋友时自己的一些心理变化。第二日师兄也给我打了20多分钟的电话，我也只听懂了一部分。做二进制这事，吴师傅从来没有用任何的大道理去指导我，只是讲述他自己亲身经历的。电话前我说师兄，我请你抽烟吧，师兄只是提了句，等你工作后拿到第一笔工资给我买条华子就行。</p><p>​     摇旗不定的时候，也问了婉儿姐姐一些东西。</p><p>​     当然做ctf遇到疑惑的时候，同组的师哥以及室友bob也会为我答疑解惑。</p><p>​      <font color= "pink">真的很感谢这些朋友们。有时也会想起吴师傅刚开始学习的时候，可能走了比我更多的弯路，我这些话却又显得过于的矫情。</font></p><pre><code> 这几天近乎都是荒废的状态，没学到太多的东西，硬要解释的话，先走慢点吧。不过明天也应该走快了。</code></pre><h3 id=""><a href="#" class="headerlink" title=""></a></h3><h3 id="-1"><a href="#-1" class="headerlink" title=""></a></h3>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;p&gt;​    &lt;font color =&quot;pink&quot;&gt;&lt;strong&gt;这里仅记录自己絮絮叨叨且无用的一些话，当作最近的一个出口吧&lt;/strong&gt;&lt;/font&gt;&lt;/p&gt;
+&lt;p&gt;​    国庆那天就直接去了实验室，但是工作效率并不令人满意。面对面前一大堆没做的东西，也许是贪心想什</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>逆向工程核心原理笔记</title>
