@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/12/06/HEVD%E6%A0%88%E6%BA%A2%E5%87%BA/</loc>
+    
+    <lastmod>2020-12-06</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/12/06/A%20TALE%20OF%20HEVD/</loc>
     
     <lastmod>2020-12-06</lastmod>
@@ -39,5 +46,12 @@
 
   
 
+  
+  <url>
+    <loc>http://yoursite.com/categories/A-TALE-OF-HEVD/</loc>
+    <lastmod>2020-12-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
   
 </urlset>

